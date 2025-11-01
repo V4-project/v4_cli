@@ -111,16 +111,16 @@ The `examples/` directory contains sample V4 bytecode files for testing with ESP
 
 ```bash
 # Turn LED on
-v4 push examples/led_on.bin --port /dev/ttyACM0
+v4 push examples/led_on.v4b --port /dev/ttyACM0
 
 # Start blinking pattern
-v4 push examples/led_blink.bin --port /dev/ttyACM0
+v4 push examples/led_blink.v4b --port /dev/ttyACM0
 
 # SOS morse code
-v4 push examples/led_sos.bin --port /dev/ttyACM0
+v4 push examples/led_sos.v4b --port /dev/ttyACM0
 
 # Turn LED off
-v4 push examples/led_off.bin --port /dev/ttyACM0
+v4 push examples/led_off.v4b --port /dev/ttyACM0
 ```
 
 See `examples/README.md` for full list of available examples.

@@ -6,29 +6,29 @@ This directory contains example V4 bytecode files for testing the CLI tool with 
 
 All LED examples control the onboard LED (GPIO8 on ESP32-C6):
 
-- **led_on.bin** - Turn LED on
-- **led_off.bin** - Turn LED off
-- **led_toggle.bin** - Toggle LED state once
-- **led_blink.bin** - Blink LED continuously (basic pattern)
-- **led_fast.bin** - Fast blinking pattern
-- **led_medium.bin** - Medium speed blinking
-- **led_slow.bin** - Slow blinking pattern
-- **led_sos.bin** - SOS morse code pattern (... --- ...)
+- **led_on.v4b** - Turn LED on
+- **led_off.v4b** - Turn LED off
+- **led_toggle.v4b** - Toggle LED state once
+- **led_blink.v4b** - Blink LED continuously (basic pattern)
+- **led_fast.v4b** - Fast blinking pattern
+- **led_medium.v4b** - Medium speed blinking
+- **led_slow.v4b** - Slow blinking pattern
+- **led_sos.v4b** - SOS morse code pattern (... --- ...)
 
 ## Usage
 
 ```bash
 # Turn LED on
-v4 push examples/led_on.bin --port /dev/ttyACM0
+v4 push examples/led_on.v4b --port /dev/ttyACM0
 
 # Start blinking
-v4 push examples/led_blink.bin --port /dev/ttyACM0
+v4 push examples/led_blink.v4b --port /dev/ttyACM0
 
 # SOS pattern
-v4 push examples/led_sos.bin --port /dev/ttyACM0
+v4 push examples/led_sos.v4b --port /dev/ttyACM0
 
 # Turn off when done
-v4 push examples/led_off.bin --port /dev/ttyACM0
+v4 push examples/led_off.v4b --port /dev/ttyACM0
 ```
 
 ## Notes
