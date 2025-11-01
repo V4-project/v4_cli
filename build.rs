@@ -36,6 +36,10 @@ fn main() {
     println!("cargo:rustc-link-lib=static=v4front");
 
     // Link C++ standard library (required by V4-front)
+    // macOS uses libc++, other platforms use libstdc++
+    #[cfg(target_os = "macos")]
+    println!("cargo:rustc-link-lib=c++");
+    #[cfg(not(target_os = "macos"))]
     println!("cargo:rustc-link-lib=stdc++");
 
     // Rebuild triggers

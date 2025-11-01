@@ -14,7 +14,7 @@ pub fn run_repl(port: &str) -> Result<()> {
     let mut serial = V4Serial::open_default(port)?;
 
     // Create compiler
-    let mut compiler = Compiler::new().map_err(|e| crate::V4Error::Compilation(e))?;
+    let mut compiler = Compiler::new().map_err(crate::V4Error::Compilation)?;
 
     // Create line editor
     let mut rl = DefaultEditor::new().map_err(|e| crate::V4Error::Repl(e.to_string()))?;
