@@ -6,7 +6,12 @@ rust-version = "1.91.0"
 authors = ["Akihito Kirisaki"]
 license = "MIT OR Apache-2.0"
 description = "CLI tool for V4 VM bytecode deployment"
-repository = "https://github.com/kirisaki/v4-cli"
+repository = "https://github.com/V4-project/v4_cli"
+homepage = "https://github.com/V4-project/v4_cli"
+documentation = "https://docs.rs/v4_cli"
+readme = "README.md"
+keywords = ["v4", "vm", "embedded", "bytecode", "cli"]
+categories = ["command-line-utilities", "embedded", "development-tools"]
 
 [[bin]]
 name = "v4"
