@@ -33,7 +33,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential
+        sudo apt-get install -y build-essential libudev-dev
 
     - name: Cache cargo registry
       uses: actions/cache@v4
@@ -81,7 +81,7 @@ jobs:
     - name: Install C++ compiler
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential
+        sudo apt-get install -y build-essential libudev-dev
 
     - name: Run clippy
       run: cargo clippy --all-targets --all-features -- -D warnings
@@ -119,7 +119,7 @@ jobs:
     - name: Install C++ compiler
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential
+        sudo apt-get install -y build-essential libudev-dev
 
     - name: Build release
       run: cargo build --release --verbose
@@ -146,7 +146,7 @@ jobs:
     - name: Install C++ compiler
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential
+        sudo apt-get install -y build-essential libudev-dev
 
     - name: Check MSRV
       run: cargo check --verbose

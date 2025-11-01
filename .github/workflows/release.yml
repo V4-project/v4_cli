@@ -78,7 +78,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential
+        sudo apt-get install -y build-essential libudev-dev
 
     - name: Install cross-compilation tools (ARM64)
       if: matrix.target == 'aarch64-unknown-linux-gnu'
@@ -134,7 +134,7 @@ jobs:
     - name: Install C++ compiler
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential
+        sudo apt-get install -y build-essential libudev-dev
 
     - name: Publish to crates.io
       run: cargo publish --token ${{ secrets.CARGO_TOKEN }}
