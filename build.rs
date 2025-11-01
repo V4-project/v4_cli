@@ -23,25 +23,49 @@ fn main() {
         .build();
 
     // Link libraries
-    println!("cargo:rustc-link-search=native={}/lib", v4_dst.display());
-    println!(
-        "cargo:rustc-link-search=native={}/lib",
-        v4front_dst.display()
-    );
-    // V4-front doesn't have install target, so link directly from build directory
-    println!(
-        "cargo:rustc-link-search=native={}/build",
-        v4front_dst.display()
-    );
+    // On Windows, CMake generates libraries in Debug/Release subdirectories
+    #[cfg(target_os = "windows")]
+    {
+        let profile = if cfg!(debug_assertions) {
+            "Debug"
+        } else {
+            "Release"
+        };
+        println!(
+            "cargo:rustc-link-search=native={}/build/{}",
+            v4_dst.display(),
+            profile
+        );
+        println!(
+            "cargo:rustc-link-search=native={}/build/{}",
+            v4front_dst.display(),
+            profile
+        );
+    }
+
+    // On Unix, libraries are in lib/ or build/
+    #[cfg(not(target_os = "windows"))]
+    {
+        println!("cargo:rustc-link-search=native={}/lib", v4_dst.display());
+        println!(
+            "cargo:rustc-link-search=native={}/lib",
+            v4front_dst.display()
+        );
+        // V4-front doesn't have install target, so link directly from build directory
+        println!(
+            "cargo:rustc-link-search=native={}/build",
+            v4front_dst.display()
+        );
+    }
 
     println!("cargo:rustc-link-lib=static=v4vm");
     println!("cargo:rustc-link-lib=static=v4front");
 
     // Link C++ standard library (required by V4-front)
-    // macOS uses libc++, other platforms use libstdc++
+    // macOS uses libc++, Windows uses built-in, other platforms use libstdc++
     #[cfg(target_os = "macos")]
     println!("cargo:rustc-link-lib=c++");
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
     println!("cargo:rustc-link-lib=stdc++");
 
     // Rebuild triggers
