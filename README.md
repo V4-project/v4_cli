@@ -107,7 +107,25 @@ cargo doc --open
 
 ## Examples
 
-See the Python reference implementation at `../V4-ports/esp32c6/examples/v4-link-demo/host/v4_link_send.py`.
+The `examples/` directory contains sample V4 bytecode files for testing with ESP32-C6 devices:
+
+```bash
+# Turn LED on
+v4 push examples/led_on.bin --port /dev/ttyACM0
+
+# Start blinking pattern
+v4 push examples/led_blink.bin --port /dev/ttyACM0
+
+# SOS morse code
+v4 push examples/led_sos.bin --port /dev/ttyACM0
+
+# Turn LED off
+v4 push examples/led_off.bin --port /dev/ttyACM0
+```
+
+See `examples/README.md` for full list of available examples.
+
+For the Python reference implementation, see `../V4-ports/esp32c6/examples/v4-link-demo/host/v4_link_send.py`.
 
 ## License
 
