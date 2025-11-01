@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2025-11-02
+
 ### Added
 
 - Build configuration for V4-front library integration via CMake
@@ -66,5 +68,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Maximum payload size: 512 bytes
 - Default timeout: 5 seconds
 
-[Unreleased]: https://github.com/kirisaki/v4-cli/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/kirisaki/v4-cli/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/kirisaki/v4-cli/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/kirisaki/v4-cli/releases/tag/v0.1.0
