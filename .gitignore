@@ -1,1 +1,4 @@
 /target
+
+# Vendor build directories (vendor source is committed)
+vendor/*/build*

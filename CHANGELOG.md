@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Build configuration for V4-front library integration via CMake
 - Support for compiling Forth source code to bytecode
+- Vendored V4, V4-front, and V4-repl libraries for standalone builds
+- Static linking of libv4, libv4front, and libv4repl
 
 ## [0.1.0] - 2025-01-XX
 
