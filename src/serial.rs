@@ -1,4 +1,4 @@
-use crate::protocol::{Command, ErrorCode, Frame};
+use crate::protocol::{Command, ErrorCode, Frame, Response};
 use crate::{Result, V4Error};
 use serialport::SerialPort;
 use std::time::{Duration, Instant};
@@ -36,25 +36,85 @@ impl V4Serial {
 
     /// Receive response with timeout
     pub fn recv_response(&mut self, timeout: Duration) -> Result<Vec<u8>> {
+        const STX: u8 = 0xA5;
         let start = Instant::now();
-        let mut response = Vec::new();
+        let mut buffer = Vec::new();
 
-        // Response is always 5 bytes: [STX][LEN_L][LEN_H][ERR_CODE][CRC]
-        while response.len() < 5 && start.elapsed() < timeout {
+        // Read bytes until we find STX or timeout
+        while start.elapsed() < timeout {
             let available = self.port.bytes_to_read()? as usize;
             if available > 0 {
                 let mut buf = vec![0u8; available];
                 let n = self.port.read(&mut buf)?;
-                response.extend_from_slice(&buf[..n]);
+                buffer.extend_from_slice(&buf[..n]);
+
+                // Search for STX
+                if let Some(pos) = buffer.iter().position(|&b| b == STX) {
+                    // Found STX, need to read header first to get frame length
+                    let mut response = vec![STX];
+                    let mut remaining_start = pos + 1;
+
+                    // Read at least 4 bytes to get LEN field: STX + LEN_L + LEN_H + ERR_CODE
+                    while response.len() < 4 && start.elapsed() < timeout {
+                        if remaining_start < buffer.len() {
+                            let to_copy =
+                                std::cmp::min(4 - response.len(), buffer.len() - remaining_start);
+                            response.extend_from_slice(
+                                &buffer[remaining_start..remaining_start + to_copy],
+                            );
+                            remaining_start += to_copy;
+                        } else {
+                            // Need to read more data
+                            let available = self.port.bytes_to_read()? as usize;
+                            if available > 0 {
+                                let mut buf = vec![0u8; available];
+                                let n = self.port.read(&mut buf)?;
+                                buffer.extend_from_slice(&buf[..n]);
+                            } else {
+                                std::thread::sleep(Duration::from_millis(10));
+                            }
+                        }
+                    }
+
+                    if response.len() >= 4 {
+                        // Parse length field to determine total frame size
+                        let payload_len = u16::from_le_bytes([response[1], response[2]]) as usize;
+                        let total_frame_len = 1 + 2 + payload_len + 1; // STX + LEN(2) + PAYLOAD + CRC
+
+                        // Continue reading until we have the complete frame
+                        while response.len() < total_frame_len && start.elapsed() < timeout {
+                            if remaining_start < buffer.len() {
+                                let to_copy = std::cmp::min(
+                                    total_frame_len - response.len(),
+                                    buffer.len() - remaining_start,
+                                );
+                                response.extend_from_slice(
+                                    &buffer[remaining_start..remaining_start + to_copy],
+                                );
+                                remaining_start += to_copy;
+                            } else {
+                                // Need to read more data
+                                let available = self.port.bytes_to_read()? as usize;
+                                if available > 0 {
+                                    let mut buf = vec![0u8; available];
+                                    let n = self.port.read(&mut buf)?;
+                                    buffer.extend_from_slice(&buf[..n]);
+                                } else {
+                                    std::thread::sleep(Duration::from_millis(10));
+                                }
+                            }
+                        }
+
+                        if response.len() == total_frame_len {
+                            return Ok(response);
+                        }
+                    }
+                }
             }
             std::thread::sleep(Duration::from_millis(10));
         }
 
-        if response.len() < 5 {
-            return Err(V4Error::Timeout);
-        }
-
-        Ok(response)
+        Err(V4Error::Timeout)
     }
 
     /// Send command and wait for response
@@ -63,7 +123,7 @@ impl V4Serial {
         command: Command,
         payload: &[u8],
         timeout: Duration,
-    ) -> Result<ErrorCode> {
+    ) -> Result<Response> {
         let frame = Frame::new(command, payload.to_vec())?;
         self.send_frame(&frame)?;
 
@@ -73,16 +133,16 @@ impl V4Serial {
 
     /// Send PING command
     pub fn ping(&mut self, timeout: Duration) -> Result<ErrorCode> {
-        self.send_command(Command::Ping, &[], timeout)
+        Ok(self.send_command(Command::Ping, &[], timeout)?.error_code)
     }
 
     /// Send RESET command
     pub fn reset(&mut self, timeout: Duration) -> Result<ErrorCode> {
-        self.send_command(Command::Reset, &[], timeout)
+        Ok(self.send_command(Command::Reset, &[], timeout)?.error_code)
     }
 
     /// Send EXEC command with bytecode
-    pub fn exec(&mut self, bytecode: &[u8], timeout: Duration) -> Result<ErrorCode> {
+    pub fn exec(&mut self, bytecode: &[u8], timeout: Duration) -> Result<Response> {
         self.send_command(Command::Exec, bytecode, timeout)
     }
 }

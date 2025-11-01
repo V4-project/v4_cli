@@ -22,6 +22,13 @@ pub struct Frame {
     pub payload: Vec<u8>,
 }
 
+/// Response from V4-link device
+#[derive(Debug, Clone, PartialEq)]
+pub struct Response {
+    pub error_code: ErrorCode,
+    pub word_indices: Vec<u16>,
+}
+
 impl Frame {
     /// Create a new frame
     pub fn new(command: Command, payload: Vec<u8>) -> Result<Self> {
@@ -62,11 +69,12 @@ impl Frame {
 
     /// Decode response frame
     ///
-    /// Response format: [STX][0x01][0x00][ERR_CODE][CRC8]
-    pub fn decode_response(data: &[u8]) -> Result<ErrorCode> {
+    /// Standard response (PING, RESET): [STX][0x01][0x00][ERR_CODE][CRC8]
+    /// EXEC response: [STX][LEN_L][LEN_H][ERR_CODE][WORD_COUNT][WORD_IDX...][CRC8]
+    pub fn decode_response(data: &[u8]) -> Result<Response> {
         if data.len() < 5 {
             return Err(V4Error::Protocol(format!(
-                "Response too short: {} bytes (expected 5)",
+                "Response too short: {} bytes (expected at least 5)",
                 data.len()
             )));
         }
@@ -78,17 +86,27 @@ impl Frame {
             )));
         }
 
-        let length = u16::from_le_bytes([data[1], data[2]]);
-        if length != 1 {
+        let length = u16::from_le_bytes([data[1], data[2]]) as usize;
+        let expected_frame_len = 4 + length; // STX(1) + LEN(2) + PAYLOAD(length) + CRC(1)
+
+        if data.len() < expected_frame_len {
             return Err(V4Error::Protocol(format!(
-                "Invalid response length: {} (expected 1)",
-                length
+                "Response too short: {} bytes (expected {})",
+                data.len(),
+                expected_frame_len
             )));
         }
 
         let err_code = data[3];
-        let expected_crc = calc_crc8(&data[1..4]);
-        let actual_crc = data[4];
+
+        // Extract payload (everything between error code and CRC)
+        let payload_start = 4;
+        let payload_end = 4 + length - 1; // -1 because length includes err_code
+        let payload = &data[payload_start..payload_end];
+
+        // Verify CRC
+        let expected_crc = calc_crc8(&data[1..payload_end]);
+        let actual_crc = data[payload_end];
 
         if expected_crc != actual_crc {
             return Err(V4Error::CrcMismatch {
@@ -97,8 +115,30 @@ impl Frame {
             });
         }
 
-        ErrorCode::from_u8(err_code)
-            .ok_or_else(|| V4Error::Protocol(format!("Unknown error code: {:#04x}", err_code)))
+        let err_code = ErrorCode::from_u8(err_code)
+            .ok_or_else(|| V4Error::Protocol(format!("Unknown error code: {:#04x}", err_code)))?;
+
+        // Parse word indices if present
+        let word_indices = if !payload.is_empty() {
+            let word_count = payload[0] as usize;
+            let mut indices = Vec::with_capacity(word_count);
+
+            for i in 0..word_count {
+                let offset = 1 + i * 2;
+                if offset + 1 < payload.len() {
+                    let idx = u16::from_le_bytes([payload[offset], payload[offset + 1]]);
+                    indices.push(idx);
+                }
+            }
+            indices
+        } else {
+            Vec::new()
+        };
+
+        Ok(Response {
+            error_code: err_code,
+            word_indices,
+        })
     }
 }
 
@@ -176,8 +216,9 @@ mod tests {
         response.extend_from_slice(&response_data);
         response.push(crc);
 
-        let err_code = Frame::decode_response(&response).unwrap();
-        assert_eq!(err_code, ErrorCode::Ok);
+        let result = Frame::decode_response(&response).unwrap();
+        assert_eq!(result.error_code, ErrorCode::Ok);
+        assert_eq!(result.word_indices.len(), 0);
     }
 
     #[test]
@@ -189,8 +230,24 @@ mod tests {
         response.extend_from_slice(&response_data);
         response.push(crc);
 
-        let err_code = Frame::decode_response(&response).unwrap();
-        assert_eq!(err_code, ErrorCode::Error);
+        let result = Frame::decode_response(&response).unwrap();
+        assert_eq!(result.error_code, ErrorCode::Error);
+        assert_eq!(result.word_indices.len(), 0);
+    }
+
+    #[test]
+    fn test_response_decode_with_word_index() {
+        // [STX][0x04][0x00][ERR_OK][WORD_COUNT=1][WORD_IDX_L=0x00][WORD_IDX_H=0x00][CRC]
+        let response_data = vec![0x04, 0x00, 0x00, 0x01, 0x00, 0x00]; // LEN=4, OK, count=1, idx=0
+        let crc = calc_crc8(&response_data);
+        let mut response = vec![0xA5];
+        response.extend_from_slice(&response_data);
+        response.push(crc);
+
+        let result = Frame::decode_response(&response).unwrap();
+        assert_eq!(result.error_code, ErrorCode::Ok);
+        assert_eq!(result.word_indices.len(), 1);
+        assert_eq!(result.word_indices[0], 0);
     }
 
     #[test]

@@ -43,7 +43,7 @@ pub fn push(file: &str, port: &str, detach: bool, timeout: Duration) -> Result<(
     pb.set_message("Sending...");
 
     // Send EXEC command
-    let err_code = serial.exec(&bytecode, timeout)?;
+    let response = serial.exec(&bytecode, timeout)?;
 
     pb.inc(size as u64);
 
@@ -55,15 +55,18 @@ pub fn push(file: &str, port: &str, detach: bool, timeout: Duration) -> Result<(
 
     pb.finish_with_message("Complete");
 
-    println!("Response: {}", err_code.name());
+    println!("Response: {}", response.error_code.name());
 
-    if err_code == ErrorCode::Ok {
+    if response.error_code == ErrorCode::Ok {
         println!("✓ Bytecode deployed successfully");
+        if !response.word_indices.is_empty() {
+            println!("  Registered {} word(s)", response.word_indices.len());
+        }
         Ok(())
     } else {
         Err(crate::V4Error::Device(format!(
             "Device returned error: {}",
-            err_code.name()
+            response.error_code.name()
         )))
     }
 }

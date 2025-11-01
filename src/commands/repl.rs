@@ -74,7 +74,7 @@ pub fn run_repl(port: &str) -> Result<()> {
                 };
 
                 // Execute on device
-                if let Err(e) = execute_on_device(&mut serial, &compiled) {
+                if let Err(e) = execute_on_device(&mut serial, &compiled, &mut compiler) {
                     eprintln!("Error: {}", e);
                     continue;
                 }
@@ -103,26 +103,52 @@ pub fn run_repl(port: &str) -> Result<()> {
 }
 
 /// Execute compiled bytecode on device
-fn execute_on_device(serial: &mut V4Serial, compiled: &CompileResult) -> Result<()> {
+fn execute_on_device(
+    serial: &mut V4Serial,
+    compiled: &CompileResult,
+    compiler: &mut Compiler,
+) -> Result<()> {
     // Execute word definitions first
     for word in &compiled.words {
-        let err_code = serial.exec(&word.bytecode, DEFAULT_TIMEOUT)?;
-        if err_code != ErrorCode::Ok {
+        eprintln!(
+            "[DEBUG] Executing word '{}' ({} bytes): {:02x?}",
+            word.name,
+            word.bytecode.len(),
+            word.bytecode
+        );
+        let response = serial.exec(&word.bytecode, DEFAULT_TIMEOUT)?;
+        if response.error_code != ErrorCode::Ok {
             return Err(crate::V4Error::Device(format!(
                 "Failed to register word '{}': {}",
                 word.name,
-                err_code.name()
+                response.error_code.name()
             )));
+        }
+
+        // Register word index returned from device
+        if let Some(&word_idx) = response.word_indices.first() {
+            eprintln!(
+                "[DEBUG] Device registered word '{}' at index {}",
+                word.name, word_idx
+            );
+            compiler
+                .register_word_index(&word.name, word_idx as i32)
+                .map_err(crate::V4Error::Compilation)?;
         }
     }
 
     // Execute main bytecode
     if !compiled.bytecode.is_empty() {
-        let err_code = serial.exec(&compiled.bytecode, DEFAULT_TIMEOUT)?;
-        if err_code != ErrorCode::Ok {
+        eprintln!(
+            "[DEBUG] Executing main bytecode ({} bytes): {:02x?}",
+            compiled.bytecode.len(),
+            compiled.bytecode
+        );
+        let response = serial.exec(&compiled.bytecode, DEFAULT_TIMEOUT)?;
+        if response.error_code != ErrorCode::Ok {
             return Err(crate::V4Error::Device(format!(
                 "Execution failed: {}",
-                err_code.name()
+                response.error_code.name()
             )));
         }
     }

@@ -134,10 +134,9 @@ impl Compiler {
                     let name = CStr::from_ptr(word.name).to_string_lossy().into_owned();
                     let bytecode = slice::from_raw_parts(word.code, word.code_len as usize);
 
-                    // Register word with compiler context
-                    let c_name = CString::new(name.as_str()).unwrap();
-                    v4front_context_register_word(self.ctx, c_name.as_ptr(), self.next_word_id);
-                    self.next_word_id += 1;
+                    // Note: We don't register word index here.
+                    // The device will register the word and return its index,
+                    // which we'll then register via register_word_index()
 
                     words.push(WordDef {
                         name,
@@ -164,6 +163,23 @@ impl Compiler {
         unsafe {
             v4front_context_reset(self.ctx);
             self.next_word_id = 0;
+        }
+    }
+
+    /// Register a word index from device
+    ///
+    /// Called after device executes bytecode and returns word index
+    pub fn register_word_index(&mut self, name: &str, vm_word_idx: i32) -> Result<(), String> {
+        unsafe {
+            let c_name = CString::new(name).map_err(|e| e.to_string())?;
+            let result = v4front_context_register_word(self.ctx, c_name.as_ptr(), vm_word_idx);
+            if result < 0 {
+                return Err(format!(
+                    "Failed to register word '{}' with index {}",
+                    name, vm_word_idx
+                ));
+            }
+            Ok(())
         }
     }
 }
@@ -213,8 +229,14 @@ mod tests {
         // Define word
         let result1 = compiler.compile(": SQUARE DUP * ;");
         assert!(result1.is_ok());
+        let compiled1 = result1.unwrap();
+        assert_eq!(compiled1.words.len(), 1);
+        assert_eq!(compiled1.words[0].name, "SQUARE");
 
-        // Use word
+        // Simulate device registering the word at index 0
+        compiler.register_word_index("SQUARE", 0).unwrap();
+
+        // Now we can use the word
         let result2 = compiler.compile("5 SQUARE");
         assert!(result2.is_ok());
     }
