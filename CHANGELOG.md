@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated CLI help text to include REPL command
 
+### Infrastructure
+
+- Add comprehensive CI/CD workflows (test, lint, security, release)
+- Add cargo-deny configuration for dependency management
+- Add multi-platform release builds (Linux, macOS, Windows, ARM64)
+- Add security audit workflow with cargo-audit
+
 ## [0.1.0] - 2025-01-XX
 
 ### Added

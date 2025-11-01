@@ -2,3 +2,7 @@
 
 # Vendor build directories (vendor source is committed)
 vendor/*/build*
+
+# CMake build directories
+target/v4/
+target/v4front/
