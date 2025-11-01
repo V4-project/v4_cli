@@ -13,7 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for compiling Forth source code to bytecode
 - Vendored V4, V4-front, and V4-repl libraries for standalone builds
 - Static linking of libv4, libv4front, and libv4repl
-- Rust FFI bindings for libv4repl C API with safe wrapper
+- Rust FFI bindings for V4-front compiler API with safe wrapper
+- `v4 repl` command for interactive Forth REPL over serial connection
+- Meta-commands in REPL: `.help`, `.ping`, `.reset`, `.exit`
+- Persistent word definitions across REPL lines
+- Command history with rustyline (arrow keys navigation)
 
 ## [0.1.0] - 2025-01-XX
 

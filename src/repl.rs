@@ -1,192 +1,177 @@
-//! Rust FFI bindings for V4 REPL C API
+//! Rust FFI bindings for V4-front compiler
 //!
-//! This module provides safe Rust wrappers around the libv4repl C API.
+//! This module provides safe Rust wrappers around V4-front C API for
+//! compiling Forth source code to V4 bytecode.
 
-use std::ffi::{CStr, CString, c_char, c_int, c_void};
+use std::ffi::{CStr, CString, c_char, c_int};
 use std::ptr;
-
-// ============================================================================
-// V4 VM API
-// ============================================================================
-
-#[repr(C)]
-pub struct Vm {
-    _private: [u8; 0],
-}
-
-#[repr(C)]
-pub struct VmConfig {
-    pub mem: *mut u8,
-    pub mem_size: u32,
-    pub mmio: *const c_void,
-    pub mmio_count: c_int,
-    pub arena: *mut c_void,
-}
-
-extern "C" {
-    fn vm_create(cfg: *const VmConfig) -> *mut Vm;
-    fn vm_destroy(vm: *mut Vm);
-    fn vm_reset(vm: *mut Vm);
-}
+use std::slice;
 
 // ============================================================================
 // V4-front Compiler API
 // ============================================================================
 
 #[repr(C)]
-pub struct V4FrontContext {
+struct V4FrontContext {
     _private: [u8; 0],
+}
+
+#[repr(C)]
+struct V4FrontWord {
+    name: *mut c_char,
+    code: *mut u8,
+    code_len: u32,
+}
+
+#[repr(C)]
+struct V4FrontBuf {
+    words: *mut V4FrontWord,
+    word_count: c_int,
+    data: *mut u8,
+    size: usize,
 }
 
 extern "C" {
     fn v4front_context_create() -> *mut V4FrontContext;
     fn v4front_context_destroy(ctx: *mut V4FrontContext);
     fn v4front_context_reset(ctx: *mut V4FrontContext);
-}
-
-// ============================================================================
-// V4-repl API
-// ============================================================================
-
-#[repr(C)]
-pub struct V4ReplContext {
-    _private: [u8; 0],
-}
-
-#[repr(C)]
-pub struct V4ReplConfig {
-    pub vm: *mut Vm,
-    pub front_ctx: *mut V4FrontContext,
-    pub line_buffer_size: usize,
-}
-
-extern "C" {
-    fn v4_repl_create(config: *const V4ReplConfig) -> *mut V4ReplContext;
-    fn v4_repl_destroy(ctx: *mut V4ReplContext);
-    fn v4_repl_process_line(ctx: *mut V4ReplContext, line: *const c_char) -> c_int;
-    fn v4_repl_print_stack(ctx: *const V4ReplContext);
-    fn v4_repl_get_error(ctx: *const V4ReplContext) -> *const c_char;
-    fn v4_repl_reset(ctx: *mut V4ReplContext);
-    fn v4_repl_stack_depth(ctx: *const V4ReplContext) -> c_int;
+    fn v4front_context_register_word(
+        ctx: *mut V4FrontContext,
+        name: *const c_char,
+        vm_word_idx: c_int,
+    ) -> c_int;
+    fn v4front_compile_with_context(
+        ctx: *mut V4FrontContext,
+        source: *const c_char,
+        out_buf: *mut V4FrontBuf,
+        err: *mut c_char,
+        err_cap: usize,
+    ) -> c_int;
+    fn v4front_free(buf: *mut V4FrontBuf);
 }
 
 // ============================================================================
 // Safe Rust Wrapper
 // ============================================================================
 
-/// Safe Rust wrapper for V4 REPL
-pub struct Repl {
-    repl_ctx: *mut V4ReplContext,
-    vm: *mut Vm,
-    compiler_ctx: *mut V4FrontContext,
-    vm_memory: Vec<u8>,
+/// Compiled word definition
+#[derive(Debug, Clone)]
+pub struct WordDef {
+    pub name: String,
+    pub bytecode: Vec<u8>,
 }
 
-impl Repl {
-    /// Create a new REPL instance with default configuration
+/// Compilation result
+#[derive(Debug)]
+pub struct CompileResult {
+    pub words: Vec<WordDef>,
+    pub bytecode: Vec<u8>,
+}
+
+/// Stateful Forth compiler for REPL
+pub struct Compiler {
+    ctx: *mut V4FrontContext,
+    next_word_id: i32,
+}
+
+impl Compiler {
+    /// Create a new compiler context
     pub fn new() -> Result<Self, String> {
-        Self::with_memory_size(16384) // 16KB default
-    }
-
-    /// Create a new REPL instance with specified VM memory size
-    pub fn with_memory_size(mem_size: usize) -> Result<Self, String> {
         unsafe {
-            // Allocate VM memory
-            let mut vm_memory = vec![0u8; mem_size];
-
-            // Create VM
-            let vm_config = VmConfig {
-                mem: vm_memory.as_mut_ptr(),
-                mem_size: mem_size as u32,
-                mmio: ptr::null(),
-                mmio_count: 0,
-                arena: ptr::null_mut(),
-            };
-
-            let vm = vm_create(&vm_config);
-            if vm.is_null() {
-                return Err("Failed to create VM".to_string());
-            }
-
-            // Create compiler context
-            let compiler_ctx = v4front_context_create();
-            if compiler_ctx.is_null() {
-                vm_destroy(vm);
+            let ctx = v4front_context_create();
+            if ctx.is_null() {
                 return Err("Failed to create compiler context".to_string());
             }
 
-            // Create REPL context
-            let repl_config = V4ReplConfig {
-                vm,
-                front_ctx: compiler_ctx,
-                line_buffer_size: 512,
-            };
-
-            let repl_ctx = v4_repl_create(&repl_config);
-            if repl_ctx.is_null() {
-                v4front_context_destroy(compiler_ctx);
-                vm_destroy(vm);
-                return Err("Failed to create REPL context".to_string());
-            }
-
-            Ok(Repl {
-                repl_ctx,
-                vm,
-                compiler_ctx,
-                vm_memory,
+            Ok(Compiler {
+                ctx,
+                next_word_id: 0,
             })
         }
     }
 
-    /// Process a single line of Forth code
-    pub fn process_line(&mut self, line: &str) -> Result<(), String> {
+    /// Compile Forth source code
+    ///
+    /// Returns compiled bytecode and any word definitions.
+    /// Word definitions are automatically registered with the compiler context.
+    pub fn compile(&mut self, source: &str) -> Result<CompileResult, String> {
         unsafe {
-            let c_line = CString::new(line).map_err(|e| e.to_string())?;
-            let result = v4_repl_process_line(self.repl_ctx, c_line.as_ptr());
+            let c_source = CString::new(source).map_err(|e| e.to_string())?;
+            let mut out_buf = V4FrontBuf {
+                words: ptr::null_mut(),
+                word_count: 0,
+                data: ptr::null_mut(),
+                size: 0,
+            };
+            let mut err_buf = [0u8; 256];
+
+            let result = v4front_compile_with_context(
+                self.ctx,
+                c_source.as_ptr(),
+                &mut out_buf,
+                err_buf.as_mut_ptr() as *mut c_char,
+                err_buf.len(),
+            );
 
             if result != 0 {
-                // Get error message
-                let err_ptr = v4_repl_get_error(self.repl_ctx);
-                if !err_ptr.is_null() {
-                    let err_msg = CStr::from_ptr(err_ptr).to_string_lossy().into_owned();
-                    return Err(err_msg);
-                }
-                return Err(format!(
-                    "Compilation or execution failed (code: {})",
-                    result
-                ));
+                let err_msg = CStr::from_ptr(err_buf.as_ptr() as *const c_char)
+                    .to_string_lossy()
+                    .into_owned();
+                v4front_free(&mut out_buf);
+                return Err(if err_msg.is_empty() {
+                    format!("Compilation failed (error code: {})", result)
+                } else {
+                    err_msg
+                });
             }
 
-            Ok(())
+            // Extract word definitions
+            let mut words = Vec::new();
+            if !out_buf.words.is_null() && out_buf.word_count > 0 {
+                let words_slice = slice::from_raw_parts(out_buf.words, out_buf.word_count as usize);
+
+                for word in words_slice {
+                    let name = CStr::from_ptr(word.name).to_string_lossy().into_owned();
+                    let bytecode = slice::from_raw_parts(word.code, word.code_len as usize);
+
+                    // Register word with compiler context
+                    let c_name = CString::new(name.as_str()).unwrap();
+                    v4front_context_register_word(self.ctx, c_name.as_ptr(), self.next_word_id);
+                    self.next_word_id += 1;
+
+                    words.push(WordDef {
+                        name,
+                        bytecode: bytecode.to_vec(),
+                    });
+                }
+            }
+
+            // Extract main bytecode
+            let bytecode = if !out_buf.data.is_null() && out_buf.size > 0 {
+                slice::from_raw_parts(out_buf.data, out_buf.size).to_vec()
+            } else {
+                Vec::new()
+            };
+
+            v4front_free(&mut out_buf);
+
+            Ok(CompileResult { words, bytecode })
         }
     }
 
-    /// Print current stack contents to stdout
-    pub fn print_stack(&self) {
-        unsafe {
-            v4_repl_print_stack(self.repl_ctx);
-        }
-    }
-
-    /// Get current stack depth
-    pub fn stack_depth(&self) -> i32 {
-        unsafe { v4_repl_stack_depth(self.repl_ctx) }
-    }
-
-    /// Reset VM and compiler context
+    /// Reset compiler context (clear all registered words)
     pub fn reset(&mut self) {
         unsafe {
-            v4_repl_reset(self.repl_ctx);
+            v4front_context_reset(self.ctx);
+            self.next_word_id = 0;
         }
     }
 }
 
-impl Drop for Repl {
+impl Drop for Compiler {
     fn drop(&mut self) {
         unsafe {
-            v4_repl_destroy(self.repl_ctx);
-            v4front_context_destroy(self.compiler_ctx);
-            vm_destroy(self.vm);
+            v4front_context_destroy(self.ctx);
         }
     }
 }
@@ -196,30 +181,60 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_repl_creation() {
-        let repl = Repl::new();
-        assert!(repl.is_ok());
+    fn test_compiler_creation() {
+        let compiler = Compiler::new();
+        assert!(compiler.is_ok());
     }
 
     #[test]
-    fn test_basic_arithmetic() {
-        let mut repl = Repl::new().unwrap();
-        assert!(repl.process_line("1 2 +").is_ok());
-        assert_eq!(repl.stack_depth(), 1);
+    fn test_basic_compilation() {
+        let mut compiler = Compiler::new().unwrap();
+        let result = compiler.compile("1 2 +");
+        assert!(result.is_ok());
+        let compiled = result.unwrap();
+        assert!(!compiled.bytecode.is_empty());
+        assert!(compiled.words.is_empty());
     }
 
     #[test]
     fn test_word_definition() {
-        let mut repl = Repl::new().unwrap();
-        assert!(repl.process_line(": DOUBLE 2 * ;").is_ok());
-        assert!(repl.process_line("5 DOUBLE").is_ok());
-        assert_eq!(repl.stack_depth(), 1);
+        let mut compiler = Compiler::new().unwrap();
+        let result = compiler.compile(": DOUBLE 2 * ;");
+        assert!(result.is_ok());
+        let compiled = result.unwrap();
+        assert_eq!(compiled.words.len(), 1);
+        assert_eq!(compiled.words[0].name, "DOUBLE");
+    }
+
+    #[test]
+    fn test_persistent_words() {
+        let mut compiler = Compiler::new().unwrap();
+
+        // Define word
+        let result1 = compiler.compile(": SQUARE DUP * ;");
+        assert!(result1.is_ok());
+
+        // Use word
+        let result2 = compiler.compile("5 SQUARE");
+        assert!(result2.is_ok());
     }
 
     #[test]
     fn test_error_handling() {
-        let mut repl = Repl::new().unwrap();
-        let result = repl.process_line("UNKNOWN_WORD");
+        let mut compiler = Compiler::new().unwrap();
+        let result = compiler.compile("UNKNOWN_WORD");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_reset() {
+        let mut compiler = Compiler::new().unwrap();
+
+        compiler.compile(": TEST 42 ;").unwrap();
+        compiler.reset();
+
+        // After reset, TEST should be unknown
+        let result = compiler.compile("TEST");
         assert!(result.is_err());
     }
 }
