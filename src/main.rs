@@ -51,6 +51,13 @@ enum Commands {
         #[arg(long, default_value = "5")]
         timeout: u64,
     },
+
+    /// Start interactive REPL session
+    Repl {
+        /// Serial port path (e.g., /dev/ttyACM0)
+        #[arg(short, long)]
+        port: String,
+    },
 }
 
 fn main() {
@@ -67,6 +74,8 @@ fn main() {
         Commands::Ping { port, timeout } => commands::ping(&port, Duration::from_secs(timeout)),
 
         Commands::Reset { port, timeout } => commands::reset(&port, Duration::from_secs(timeout)),
+
+        Commands::Repl { port } => commands::run_repl(&port),
     };
 
     if let Err(e) = result {

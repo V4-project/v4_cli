@@ -14,10 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Vendored V4, V4-front, and V4-repl libraries for standalone builds
 - Static linking of libv4, libv4front, and libv4repl
 - Rust FFI bindings for V4-front compiler API with safe wrapper
-- `v4 repl` command for interactive Forth REPL over serial connection
+- `v4 repl --port <PORT>` command for interactive Forth REPL over serial connection
 - Meta-commands in REPL: `.help`, `.ping`, `.reset`, `.exit`
 - Persistent word definitions across REPL lines
 - Command history with rustyline (arrow keys navigation)
+
+### Changed
+
+- Updated CLI help text to include REPL command
 
 ## [0.1.0] - 2025-01-XX
 
