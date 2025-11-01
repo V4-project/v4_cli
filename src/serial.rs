@@ -61,10 +61,10 @@ impl V4Serial {
     pub fn send_command(
         &mut self,
         command: Command,
-        payload: Vec<u8>,
+        payload: &[u8],
         timeout: Duration,
     ) -> Result<ErrorCode> {
-        let frame = Frame::new(command, payload)?;
+        let frame = Frame::new(command, payload.to_vec())?;
         self.send_frame(&frame)?;
 
         let response = self.recv_response(timeout)?;
@@ -73,16 +73,16 @@ impl V4Serial {
 
     /// Send PING command
     pub fn ping(&mut self, timeout: Duration) -> Result<ErrorCode> {
-        self.send_command(Command::Ping, vec![], timeout)
+        self.send_command(Command::Ping, &[], timeout)
     }
 
     /// Send RESET command
     pub fn reset(&mut self, timeout: Duration) -> Result<ErrorCode> {
-        self.send_command(Command::Reset, vec![], timeout)
+        self.send_command(Command::Reset, &[], timeout)
     }
 
     /// Send EXEC command with bytecode
-    pub fn exec(&mut self, bytecode: Vec<u8>, timeout: Duration) -> Result<ErrorCode> {
+    pub fn exec(&mut self, bytecode: &[u8], timeout: Duration) -> Result<ErrorCode> {
         self.send_command(Command::Exec, bytecode, timeout)
     }
 }

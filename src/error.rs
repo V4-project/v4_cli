@@ -21,4 +21,10 @@ pub enum V4Error {
 
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+
+    #[error("Compilation error: {0}")]
+    Compilation(String),
+
+    #[error("REPL error: {0}")]
+    Repl(String),
 }

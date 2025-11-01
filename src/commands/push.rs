@@ -43,7 +43,7 @@ pub fn push(file: &str, port: &str, detach: bool, timeout: Duration) -> Result<(
     pb.set_message("Sending...");
 
     // Send EXEC command
-    let err_code = serial.exec(bytecode, timeout)?;
+    let err_code = serial.exec(&bytecode, timeout)?;
 
     pb.inc(size as u64);
 

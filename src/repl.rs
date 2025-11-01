@@ -31,7 +31,7 @@ struct V4FrontBuf {
     size: usize,
 }
 
-extern "C" {
+unsafe extern "C" {
     fn v4front_context_create() -> *mut V4FrontContext;
     fn v4front_context_destroy(ctx: *mut V4FrontContext);
     fn v4front_context_reset(ctx: *mut V4FrontContext);

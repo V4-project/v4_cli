@@ -17,7 +17,7 @@ pub fn run_repl(port: &str) -> Result<()> {
     let mut compiler = Compiler::new().map_err(|e| crate::V4Error::Compilation(e))?;
 
     // Create line editor
-    let mut rl = DefaultEditor::new().map_err(|e| crate::V4Error::Io(e.into()))?;
+    let mut rl = DefaultEditor::new().map_err(|e| crate::V4Error::Repl(e.to_string()))?;
 
     // Print welcome message
     println!("V4 REPL v{}", env!("CARGO_PKG_VERSION"));
