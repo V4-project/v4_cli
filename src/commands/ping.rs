@@ -1,6 +1,6 @@
+use crate::Result;
 use crate::protocol::ErrorCode;
 use crate::serial::V4Serial;
-use crate::Result;
 use std::time::Duration;
 
 /// Send PING command to device

@@ -97,9 +97,8 @@ impl Frame {
             });
         }
 
-        ErrorCode::from_u8(err_code).ok_or_else(|| {
-            V4Error::Protocol(format!("Unknown error code: {:#04x}", err_code))
-        })
+        ErrorCode::from_u8(err_code)
+            .ok_or_else(|| V4Error::Protocol(format!("Unknown error code: {:#04x}", err_code)))
     }
 }
 
