@@ -9,13 +9,15 @@ fn main() {
 
     // Build V4 VM library first
     let v4_dst = Config::new(&v4_path)
-        .define("BUILD_TESTS", "OFF")
+        .define("V4_BUILD_TESTS", "OFF")
+        .define("V4_BUILD_TOOLS", "OFF")
+        .define("V4_ENABLE_MOCK_HAL", "OFF")
         .out_dir(manifest_dir.join("target/v4"))
         .build();
 
     // Build V4-front compiler library (depends on V4)
     let v4front_dst = Config::new(&v4front_path)
-        .define("BUILD_TESTS", "OFF")
+        .define("V4FRONT_BUILD_TESTS", "OFF")
         .define("V4_SRC_DIR", v4_path.to_str().unwrap())
         .out_dir(manifest_dir.join("target/v4front"))
         .build();
