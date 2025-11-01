@@ -1,4 +1,6 @@
 use clap::{Parser, Subcommand};
+use std::time::Duration;
+use v4_cli::commands;
 
 #[derive(Parser)]
 #[command(name = "v4")]
@@ -33,6 +35,10 @@ enum Commands {
         /// Serial port path
         #[arg(short, long)]
         port: String,
+
+        /// Timeout in seconds
+        #[arg(long, default_value = "5")]
+        timeout: u64,
     },
 
     /// Reset VM
@@ -40,25 +46,27 @@ enum Commands {
         /// Serial port path
         #[arg(short, long)]
         port: String,
+
+        /// Timeout in seconds
+        #[arg(long, default_value = "5")]
+        timeout: u64,
     },
 }
 
 fn main() {
     let cli = Cli::parse();
 
-    let result: anyhow::Result<()> = match cli.command {
-        Commands::Push { file, port, detach, timeout } => {
-            println!("Push command: file={}, port={}, detach={}, timeout={}", file, port, detach, timeout);
-            Ok(())
-        }
-        Commands::Ping { port } => {
-            println!("Ping command: port={}", port);
-            Ok(())
-        }
-        Commands::Reset { port } => {
-            println!("Reset command: port={}", port);
-            Ok(())
-        }
+    let result = match cli.command {
+        Commands::Push {
+            file,
+            port,
+            detach,
+            timeout,
+        } => commands::push(&file, &port, detach, Duration::from_secs(timeout)),
+
+        Commands::Ping { port, timeout } => commands::ping(&port, Duration::from_secs(timeout)),
+
+        Commands::Reset { port, timeout } => commands::reset(&port, Duration::from_secs(timeout)),
     };
 
     if let Err(e) = result {
