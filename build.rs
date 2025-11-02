@@ -63,6 +63,28 @@ fn main() {
         } else {
             println!("cargo:warning=V4-front build/{} does not exist!", profile);
         }
+
+        // Also check the parent build directory to see what's there
+        if let Ok(entries) = std::fs::read_dir(&v4front_build_root) {
+            println!("cargo:warning=V4-front build/ root contents:");
+            for entry in entries.flatten() {
+                let name = entry.file_name();
+                println!("cargo:warning=  - {}", name.to_string_lossy());
+            }
+        } else {
+            println!("cargo:warning=V4-front build/ root does not exist!");
+        }
+
+        // Check v4front_dst directory
+        if let Ok(entries) = std::fs::read_dir(&v4front_dst) {
+            println!(
+                "cargo:warning=V4-front dst ({}) contents:",
+                v4front_dst.display()
+            );
+            for entry in entries.flatten() {
+                println!("cargo:warning=  - {}", entry.file_name().to_string_lossy());
+            }
+        }
     }
 
     // On Unix, libraries are in lib/ or build/
