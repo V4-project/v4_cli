@@ -96,13 +96,8 @@ jobs:
         fi
 
     - name: Strip binary (Unix)
-      if: matrix.os != 'windows-latest'
-      run: |
-        if [ "${{ matrix.target }}" = "aarch64-unknown-linux-gnu" ]; then
-          aarch64-linux-gnu-strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-        else
-          strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
-        fi
+      if: matrix.os != 'windows-latest' && matrix.target != 'aarch64-unknown-linux-gnu'
+      run: strip target/${{ matrix.target }}/release/${{ matrix.artifact_name }}
 
     - name: Create archive
       id: create_archive
