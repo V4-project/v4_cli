@@ -38,12 +38,21 @@ fn main() {
 
         // V4-front doesn't have install target, check multiple possible locations
         let v4front_build_path = v4front_dst.join("build").join(&profile);
-        println!("cargo:rustc-link-search=native={}", v4front_build_path.display());
-        println!("cargo:warning=V4-front build path: {}", v4front_build_path.display());
+        println!(
+            "cargo:rustc-link-search=native={}",
+            v4front_build_path.display()
+        );
+        println!(
+            "cargo:warning=V4-front build path: {}",
+            v4front_build_path.display()
+        );
 
         // Also try the build directory root (sometimes CMake puts libs there)
         let v4front_build_root = v4front_dst.join("build");
-        println!("cargo:rustc-link-search=native={}", v4front_build_root.display());
+        println!(
+            "cargo:rustc-link-search=native={}",
+            v4front_build_root.display()
+        );
 
         // List directory contents for debugging
         if let Ok(entries) = std::fs::read_dir(&v4front_build_path) {
