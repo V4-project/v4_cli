@@ -8,19 +8,43 @@ fn main() {
     let v4front_path = manifest_dir.join("vendor/V4-front");
 
     // Build V4 VM library first
-    let v4_dst = Config::new(&v4_path)
+    let mut v4_config = Config::new(&v4_path);
+    v4_config
         .define("V4_BUILD_TESTS", "OFF")
         .define("V4_BUILD_TOOLS", "OFF")
         .define("V4_ENABLE_MOCK_HAL", "OFF")
-        .out_dir(manifest_dir.join("target/v4"))
-        .build();
+        .out_dir(manifest_dir.join("target/v4"));
+
+    // Set build profile for Windows
+    #[cfg(target_os = "windows")]
+    {
+        if cfg!(debug_assertions) {
+            v4_config.profile("Debug");
+        } else {
+            v4_config.profile("Release");
+        }
+    }
+
+    let v4_dst = v4_config.build();
 
     // Build V4-front compiler library (depends on V4)
-    let v4front_dst = Config::new(&v4front_path)
+    let mut v4front_config = Config::new(&v4front_path);
+    v4front_config
         .define("V4FRONT_BUILD_TESTS", "OFF")
         .define("V4_SRC_DIR", v4_path.to_str().unwrap())
-        .out_dir(manifest_dir.join("target/v4front"))
-        .build();
+        .out_dir(manifest_dir.join("target/v4front"));
+
+    // Set build profile for Windows
+    #[cfg(target_os = "windows")]
+    {
+        if cfg!(debug_assertions) {
+            v4front_config.profile("Debug");
+        } else {
+            v4front_config.profile("Release");
+        }
+    }
+
+    let v4front_dst = v4front_config.build();
 
     // Link libraries
     // On Windows, CMake generates libraries in Debug/Release subdirectories
