@@ -31,11 +31,9 @@ fn main() {
         } else {
             "Release"
         };
-        println!(
-            "cargo:rustc-link-search=native={}/build/{}",
-            v4_dst.display(),
-            profile
-        );
+        // V4 VM has install target, libraries go to lib/
+        println!("cargo:rustc-link-search=native={}/lib", v4_dst.display());
+        // V4-front doesn't have install target, link directly from build directory
         println!(
             "cargo:rustc-link-search=native={}/build/{}",
             v4front_dst.display(),
@@ -46,12 +44,9 @@ fn main() {
     // On Unix, libraries are in lib/ or build/
     #[cfg(not(target_os = "windows"))]
     {
+        // V4 VM has install target, libraries go to lib/
         println!("cargo:rustc-link-search=native={}/lib", v4_dst.display());
-        println!(
-            "cargo:rustc-link-search=native={}/lib",
-            v4front_dst.display()
-        );
-        // V4-front doesn't have install target, so link directly from build directory
+        // V4-front doesn't have install target, link directly from build directory
         println!(
             "cargo:rustc-link-search=native={}/build",
             v4front_dst.display()
