@@ -9,7 +9,7 @@ use std::time::Duration;
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// Run interactive REPL session
-pub fn run_repl(port: &str) -> Result<()> {
+pub fn run_repl(port: &str, no_reset: bool) -> Result<()> {
     // Open serial connection
     let mut serial = V4Serial::open_default(port)?;
 
@@ -26,12 +26,18 @@ pub fn run_repl(port: &str) -> Result<()> {
     println!("Type '.help' for help");
     println!();
 
-    // Reset device
-    println!("Resetting device...");
-    match serial.reset(DEFAULT_TIMEOUT) {
-        Ok(ErrorCode::Ok) => println!("Device ready\n"),
-        Ok(err) => println!("Warning: Reset returned {}\n", err.name()),
-        Err(e) => println!("Warning: Reset failed: {}\n", e),
+    // Reset device (unless --no-reset is specified)
+    if no_reset {
+        println!("Skipping VM reset (--no-reset)\n");
+        println!("Warning: Compiler context is empty. Existing device words may not be callable.");
+        println!("Use '.reset' to reset both VM and compiler context.\n");
+    } else {
+        println!("Resetting device...");
+        match serial.reset(DEFAULT_TIMEOUT) {
+            Ok(ErrorCode::Ok) => println!("Device ready\n"),
+            Ok(err) => println!("Warning: Reset returned {}\n", err.name()),
+            Err(e) => println!("Warning: Reset failed: {}\n", e),
+        }
     }
 
     // REPL loop

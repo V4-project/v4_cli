@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-11-04
+
+### Added
+
+- `v4 exec <file> --port <PORT>` command for executing Forth source files on device
+  - Compiles Forth source code (.fs files) using V4-front
+  - Sends word definitions to device and registers them in VM
+  - Executes main bytecode if present
+  - Supports `--timeout` flag for configuring execution timeout
+- `v4 exec --repl` flag to enter REPL after file execution
+  - Preserves compiler context from file execution
+  - Enables immediate testing of defined words
+  - Seamless transition from batch execution to interactive mode
+- `v4 repl --no-reset` flag to skip VM reset on REPL startup
+  - Preserves existing word definitions on device
+  - Useful for connecting to already-running VMs
+  - Displays warning about empty compiler context
+- Example Forth library: `examples/nanoc6/led.fs`
+  - LED control words for NanoC6 (ESP32-C6) board
+  - Provides `led-on`, `led-off`, `led-blink`, `led-blink-fast`, `led-blink-slow`
+  - Demonstrates GPIO syscall usage (SYS 0, SYS 1, SYS 34)
+
+### Changed
+
+- REPL startup message now shows version from `CARGO_PKG_VERSION`
+- Improved REPL help text with `.reset` command documentation
+
 ## [0.2.0] - 2025-11-02
 
 ### Added
@@ -68,6 +95,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Maximum payload size: 512 bytes
 - Default timeout: 5 seconds
 
-[Unreleased]: https://github.com/kirisaki/v4-cli/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/kirisaki/v4-cli/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/kirisaki/v4-cli/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/kirisaki/v4-cli/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/kirisaki/v4-cli/releases/tag/v0.1.0

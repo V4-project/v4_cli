@@ -57,6 +57,28 @@ enum Commands {
         /// Serial port path (e.g., /dev/ttyACM0)
         #[arg(short, long)]
         port: String,
+
+        /// Skip VM reset on startup (preserves existing words)
+        #[arg(long)]
+        no_reset: bool,
+    },
+
+    /// Execute Forth source file on device
+    Exec {
+        /// Forth source file path
+        file: String,
+
+        /// Serial port path (e.g., /dev/ttyACM0)
+        #[arg(short, long)]
+        port: String,
+
+        /// Timeout in seconds
+        #[arg(long, default_value = "5")]
+        timeout: u64,
+
+        /// Enter REPL after execution
+        #[arg(long)]
+        repl: bool,
     },
 }
 
@@ -75,7 +97,14 @@ fn main() {
 
         Commands::Reset { port, timeout } => commands::reset(&port, Duration::from_secs(timeout)),
 
-        Commands::Repl { port } => commands::run_repl(&port),
+        Commands::Repl { port, no_reset } => commands::run_repl(&port, no_reset),
+
+        Commands::Exec {
+            file,
+            port,
+            timeout,
+            repl,
+        } => commands::exec(&file, &port, Duration::from_secs(timeout), repl),
     };
 
     if let Err(e) = result {
