@@ -71,7 +71,7 @@ impl V4Serial {
                                 let n = self.port.read(&mut buf)?;
                                 buffer.extend_from_slice(&buf[..n]);
                             } else {
-                                std::thread::sleep(Duration::from_millis(10));
+                                std::thread::sleep(Duration::from_millis(20));
                             }
                         }
                     }
@@ -100,7 +100,7 @@ impl V4Serial {
                                     let n = self.port.read(&mut buf)?;
                                     buffer.extend_from_slice(&buf[..n]);
                                 } else {
-                                    std::thread::sleep(Duration::from_millis(10));
+                                    std::thread::sleep(Duration::from_millis(20));
                                 }
                             }
                         }
@@ -111,7 +111,7 @@ impl V4Serial {
                     }
                 }
             }
-            std::thread::sleep(Duration::from_millis(10));
+            std::thread::sleep(Duration::from_millis(20));
         }
 
         Err(V4Error::Timeout)
