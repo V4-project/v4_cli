@@ -123,7 +123,7 @@ fn main() {
         );
     }
 
-    println!("cargo:rustc-link-lib=static=v4vm");
+    println!("cargo:rustc-link-lib=static=v4engine");
     println!("cargo:rustc-link-lib=static=v4front");
 
     // Link C++ standard library (required by V4-front)
