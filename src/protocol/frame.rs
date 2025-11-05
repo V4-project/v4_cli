@@ -27,6 +27,7 @@ pub struct Frame {
 pub struct Response {
     pub error_code: ErrorCode,
     pub word_indices: Vec<u16>,
+    pub data: Vec<u8>,
 }
 
 impl Frame {
@@ -138,6 +139,7 @@ impl Frame {
         Ok(Response {
             error_code: err_code,
             word_indices,
+            data: payload.to_vec(),
         })
     }
 }

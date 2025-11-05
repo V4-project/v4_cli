@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **New debugging meta-commands for REPL**
+  - `.stack` - Display data stack and return stack contents
+  - `.rstack` - Display return stack with call trace
+  - `.dump [addr] [len]` - Hexdump memory at specified address (default: 256 bytes)
+  - `.see <word_idx>` - Show word bytecode disassembly
+- **V4-link protocol query commands**
+  - `QueryStack (0x30)` - Query stack state
+  - `QueryMemory (0x40)` - Query memory dump
+  - `QueryWord (0x50)` - Query word information
+- Serial protocol methods: `query_stack()`, `query_memory()`, `query_word()`
+- Response data field for query command payloads
+- CLI error variant for user input validation errors
+
+### Changed
+- Updated `.help` command to include new debugging meta-commands
+- Enhanced `Response` struct with `data` field for query responses
+
 ## [0.3.0] - 2025-11-04
 
 ### Added

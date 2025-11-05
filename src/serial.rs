@@ -145,6 +145,27 @@ impl V4Serial {
     pub fn exec(&mut self, bytecode: &[u8], timeout: Duration) -> Result<Response> {
         self.send_command(Command::Exec, bytecode, timeout)
     }
+
+    /// Query stack state (data stack + return stack)
+    pub fn query_stack(&mut self, timeout: Duration) -> Result<Response> {
+        self.send_command(Command::QueryStack, &[], timeout)
+    }
+
+    /// Query memory dump at address
+    pub fn query_memory(&mut self, addr: u32, len: u16, timeout: Duration) -> Result<Response> {
+        let mut payload = Vec::with_capacity(6);
+        // Address (little-endian u32)
+        payload.extend_from_slice(&addr.to_le_bytes());
+        // Length (little-endian u16)
+        payload.extend_from_slice(&len.to_le_bytes());
+        self.send_command(Command::QueryMemory, &payload, timeout)
+    }
+
+    /// Query word information by index
+    pub fn query_word(&mut self, word_idx: u16, timeout: Duration) -> Result<Response> {
+        let payload = word_idx.to_le_bytes();
+        self.send_command(Command::QueryWord, &payload, timeout)
+    }
 }
 
 #[cfg(test)]

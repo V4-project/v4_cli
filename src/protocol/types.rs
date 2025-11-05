@@ -6,6 +6,12 @@ pub enum Command {
     Exec = 0x10,
     /// Connection check
     Ping = 0x20,
+    /// Query stack state
+    QueryStack = 0x30,
+    /// Query memory dump
+    QueryMemory = 0x40,
+    /// Query word information
+    QueryWord = 0x50,
     /// VM reset
     Reset = 0xFF,
 }

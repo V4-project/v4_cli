@@ -27,4 +27,7 @@ pub enum V4Error {
 
     #[error("REPL error: {0}")]
     Repl(String),
+
+    #[error("CLI error: {0}")]
+    Cli(String),
 }
