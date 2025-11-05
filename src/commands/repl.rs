@@ -262,7 +262,8 @@ fn cmd_stack(serial: &mut V4Serial) -> Result<()> {
             if pos + 4 > data.len() {
                 break;
             }
-            let value = i32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]);
+            let value =
+                i32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]);
             println!("  [{}]: 0x{:08X} ({})", i, value as u32, value);
             pos += 4;
         }
@@ -284,7 +285,8 @@ fn cmd_stack(serial: &mut V4Serial) -> Result<()> {
             if pos + 4 > data.len() {
                 break;
             }
-            let value = i32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]);
+            let value =
+                i32::from_le_bytes([data[pos], data[pos + 1], data[pos + 2], data[pos + 3]]);
             println!("  [{}]: 0x{:08X}", i, value as u32);
             pos += 4;
         }
@@ -344,19 +346,20 @@ fn cmd_rstack(serial: &mut V4Serial) -> Result<()> {
 fn cmd_dump(serial: &mut V4Serial, args: &[&str]) -> Result<()> {
     // TODO: Track last dump address for continuation
     let addr: u32 = if args.is_empty() {
-        0  // Default to address 0
+        0 // Default to address 0
     } else {
-        args[0].parse().map_err(|_| {
-            crate::V4Error::Cli(format!("Invalid address: {}", args[0]))
-        })?
+        args[0]
+            .parse()
+            .map_err(|_| crate::V4Error::Cli(format!("Invalid address: {}", args[0])))?
     };
 
     let len: u16 = if args.len() < 2 {
-        256  // Default to 256 bytes
+        256 // Default to 256 bytes
     } else {
-        args[1].parse::<u16>().map_err(|_| {
-            crate::V4Error::Cli(format!("Invalid length: {}", args[1]))
-        })?.min(256)
+        args[1]
+            .parse::<u16>()
+            .map_err(|_| crate::V4Error::Cli(format!("Invalid length: {}", args[1])))?
+            .min(256)
     };
 
     let response = serial.query_memory(addr, len, DEFAULT_TIMEOUT)?;
@@ -413,9 +416,9 @@ fn cmd_see(serial: &mut V4Serial, args: &[&str]) -> Result<()> {
         return Err(crate::V4Error::Cli("Usage: .see <word_index>".to_string()));
     }
 
-    let word_idx: u16 = args[0].parse().map_err(|_| {
-        crate::V4Error::Cli(format!("Invalid word index: {}", args[0]))
-    })?;
+    let word_idx: u16 = args[0]
+        .parse()
+        .map_err(|_| crate::V4Error::Cli(format!("Invalid word index: {}", args[0])))?;
 
     let response = serial.query_word(word_idx, DEFAULT_TIMEOUT)?;
     if response.error_code != ErrorCode::Ok {
