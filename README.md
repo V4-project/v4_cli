@@ -10,13 +10,15 @@ CLI tool for deploying bytecode to V4 VM devices via the V4-link protocol over U
 ## Features
 
 - **Interactive REPL** for Forth development (`v4 repl`)
-  - Persistent word definitions across REPL lines
+  - **Compiler Context Management** - Persistent word definitions across REPL sessions
   - Command history with arrow key navigation
   - **Debugging meta-commands**:
     - `.stack` - Display data and return stack contents
     - `.rstack` - Show call trace via return stack
     - `.dump` - Hexdump memory at any address
     - `.see` - Disassemble word bytecode
+    - `.words` - List all defined words
+    - `.reset` - Reset VM and compiler context
 - **Deploy bytecode** to V4 VM devices (`v4 push`)
 - **Check connection** to devices (`v4 ping`)
 - **Reset VM** state (`v4 reset`)
@@ -52,23 +54,28 @@ v4 repl --port /dev/ttyACM0
 Example REPL session:
 
 ```forth
-V4 REPL v0.1.0
+V4 REPL v0.5.0
 Connected to /dev/ttyACM0
 Type 'bye' or press Ctrl+D to exit
 Type '.help' for help
 
 v4> 1 2 +
- ok
+ ok [1]: 3
 
 v4> : SQUARE DUP * ;
  ok
 
 v4> 5 SQUARE
- ok
+ ok [1]: 25
+
+v4> .words
+Defined words (1):
+  SQUARE
 
 v4> .help
 Available commands:
   .help              - Show this help
+  .words             - List all defined words
   .ping              - Check device connection
   .reset             - Reset VM and compiler context
   .stack             - Show data and return stack contents
