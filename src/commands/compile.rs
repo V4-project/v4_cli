@@ -1,5 +1,5 @@
-use crate::v4front_ffi;
 use crate::Result;
+use crate::v4front_ffi;
 use std::fs;
 use std::path::Path;
 
@@ -28,14 +28,12 @@ pub fn compile(input: &str, output: Option<&str>) -> Result<()> {
     };
 
     // Compile source code
-    let buf = v4front_ffi::compile_source(&source)
-        .map_err(|e| crate::V4Error::Protocol(e))?;
+    let buf = v4front_ffi::compile_source(&source).map_err(|e| crate::V4Error::Protocol(e))?;
 
     println!("✓ Compilation successful");
 
     // Save bytecode to file
-    v4front_ffi::save_bytecode(&buf, &output_path)
-        .map_err(|e| crate::V4Error::Protocol(e))?;
+    v4front_ffi::save_bytecode(&buf, &output_path).map_err(|e| crate::V4Error::Protocol(e))?;
 
     // Free the buffer
     v4front_ffi::free_bytecode(buf);

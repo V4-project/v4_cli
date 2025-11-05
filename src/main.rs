@@ -107,9 +107,7 @@ fn main() {
 
         Commands::Reset { port, timeout } => commands::reset(&port, Duration::from_secs(timeout)),
 
-        Commands::Compile { input, output } => {
-            commands::compile(&input, output.as_deref())
-        }
+        Commands::Compile { input, output } => commands::compile(&input, output.as_deref()),
 
         Commands::Repl { port, no_reset } => commands::run_repl(&port, no_reset),
 
