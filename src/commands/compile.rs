@@ -28,12 +28,12 @@ pub fn compile(input: &str, output: Option<&str>) -> Result<()> {
     };
 
     // Compile source code
-    let buf = v4front_ffi::compile_source(&source).map_err(|e| crate::V4Error::Protocol(e))?;
+    let buf = v4front_ffi::compile_source(&source).map_err(crate::V4Error::Protocol)?;
 
     println!("✓ Compilation successful");
 
     // Save bytecode to file
-    v4front_ffi::save_bytecode(&buf, &output_path).map_err(|e| crate::V4Error::Protocol(e))?;
+    v4front_ffi::save_bytecode(&buf, &output_path).map_err(crate::V4Error::Protocol)?;
 
     // Free the buffer
     v4front_ffi::free_bytecode(buf);
