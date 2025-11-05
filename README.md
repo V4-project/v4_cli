@@ -10,12 +10,17 @@ CLI tool for deploying bytecode to V4 VM devices via the V4-link protocol over U
 ## Features
 
 - **Interactive REPL** for Forth development (`v4 repl`)
+  - Persistent word definitions across REPL lines
+  - Command history with arrow key navigation
+  - **Debugging meta-commands**:
+    - `.stack` - Display data and return stack contents
+    - `.rstack` - Show call trace via return stack
+    - `.dump` - Hexdump memory at any address
+    - `.see` - Disassemble word bytecode
 - **Deploy bytecode** to V4 VM devices (`v4 push`)
 - **Check connection** to devices (`v4 ping`)
 - **Reset VM** state (`v4 reset`)
 - Progress bar for bytecode deployment
-- Persistent word definitions across REPL lines
-- Command history with arrow key navigation
 - Configurable timeout
 - Works with ESP32-C6, CH32V203, and other V4-enabled devices
 
@@ -63,11 +68,22 @@ v4> 5 SQUARE
 
 v4> .help
 Available commands:
-  .help    - Show this help
-  .ping    - Check device connection
-  .reset   - Reset VM and compiler context
-  .exit    - Exit REPL (same as 'bye')
-  bye      - Exit REPL
+  .help              - Show this help
+  .ping              - Check device connection
+  .reset             - Reset VM and compiler context
+  .stack             - Show data and return stack contents
+  .rstack            - Show return stack with call trace
+  .dump [addr] [len] - Hexdump memory (default: continue from last)
+  .see <word_idx>    - Show word bytecode disassembly
+  .exit              - Exit REPL (same as 'bye')
+  bye                - Exit REPL
+
+v4> .stack
+Data Stack (depth: 1 / 256):
+  [0]: 0x00000019 (25)
+
+Return Stack (depth: 0 / 64):
+  <empty>
 
 v4> bye
 Goodbye!
