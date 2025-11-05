@@ -52,6 +52,16 @@ enum Commands {
         timeout: u64,
     },
 
+    /// Compile Forth source to bytecode
+    Compile {
+        /// Input Forth source file path
+        input: String,
+
+        /// Output bytecode file path (default: input with .v4b extension)
+        #[arg(short, long)]
+        output: Option<String>,
+    },
+
     /// Start interactive REPL session
     Repl {
         /// Serial port path (e.g., /dev/ttyACM0)
@@ -96,6 +106,10 @@ fn main() {
         Commands::Ping { port, timeout } => commands::ping(&port, Duration::from_secs(timeout)),
 
         Commands::Reset { port, timeout } => commands::reset(&port, Duration::from_secs(timeout)),
+
+        Commands::Compile { input, output } => {
+            commands::compile(&input, output.as_deref())
+        }
 
         Commands::Repl { port, no_reset } => commands::run_repl(&port, no_reset),
 
