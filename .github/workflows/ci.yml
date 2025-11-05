@@ -20,8 +20,28 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
+    - name: Setup workspace structure
+      run: |
+        mkdir -p ${{ github.workspace }}/..
+        cd ${{ github.workspace }}/..
+      shell: bash
+
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        path: v4_cli
+
+    - name: Checkout V4-engine
+      uses: actions/checkout@v4
+      with:
+        repository: V4-project/V4-engine
+        path: V4-engine
+
+    - name: Checkout V4-front
+      uses: actions/checkout@v4
+      with:
+        repository: kirisaki/V4-front
+        path: V4-front
 
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
@@ -50,16 +70,19 @@ jobs:
     - name: Cache cargo build
       uses: actions/cache@v4
       with:
-        path: target
+        path: v4_cli/target
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Build
+      working-directory: v4_cli
       run: cargo build --verbose
 
     - name: Run tests
+      working-directory: v4_cli
       run: cargo test --verbose
 
     - name: Build examples
+      working-directory: v4_cli
       run: cargo build --examples --verbose
 
   clippy:
@@ -67,8 +90,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Setup workspace structure
+      run: mkdir -p ${{ github.workspace }}/..
+
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        path: v4_cli
+
+    - name: Checkout V4-engine
+      uses: actions/checkout@v4
+      with:
+        repository: V4-project/V4-engine
+        path: V4-engine
+
+    - name: Checkout V4-front
+      uses: actions/checkout@v4
+      with:
+        repository: kirisaki/V4-front
+        path: V4-front
 
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
@@ -84,6 +124,7 @@ jobs:
         sudo apt-get install -y build-essential libudev-dev
 
     - name: Run clippy
+      working-directory: v4_cli
       run: cargo clippy --all-targets --all-features -- -D warnings
 
   fmt:
@@ -107,8 +148,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Setup workspace structure
+      run: mkdir -p ${{ github.workspace }}/..
+
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        path: v4_cli
+
+    - name: Checkout V4-engine
+      uses: actions/checkout@v4
+      with:
+        repository: V4-project/V4-engine
+        path: V4-engine
+
+    - name: Checkout V4-front
+      uses: actions/checkout@v4
+      with:
+        repository: kirisaki/V4-front
+        path: V4-front
 
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
@@ -122,9 +180,11 @@ jobs:
         sudo apt-get install -y build-essential libudev-dev
 
     - name: Build release
+      working-directory: v4_cli
       run: cargo build --release --verbose
 
     - name: Check binary size
+      working-directory: v4_cli
       run: |
         ls -lh target/release/v4
         size target/release/v4 || true
@@ -134,8 +194,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Setup workspace structure
+      run: mkdir -p ${{ github.workspace }}/..
+
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        path: v4_cli
+
+    - name: Checkout V4-engine
+      uses: actions/checkout@v4
+      with:
+        repository: V4-project/V4-engine
+        path: V4-engine
+
+    - name: Checkout V4-front
+      uses: actions/checkout@v4
+      with:
+        repository: kirisaki/V4-front
+        path: V4-front
 
     - name: Setup Rust (MSRV)
       uses: dtolnay/rust-toolchain@1.91.0
@@ -149,4 +226,5 @@ jobs:
         sudo apt-get install -y build-essential libudev-dev
 
     - name: Check MSRV
+      working-directory: v4_cli
       run: cargo check --verbose

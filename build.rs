@@ -2,10 +2,11 @@ use cmake::Config;
 use std::path::PathBuf;
 
 fn main() {
-    // Get absolute paths to vendor directories
+    // Get absolute paths to V4 repositories
+    // In V4-project workspace, v4_cli is sibling to V4-engine and V4-front
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let v4_path = manifest_dir.join("vendor/V4");
-    let v4front_path = manifest_dir.join("vendor/V4-front");
+    let v4_path = manifest_dir.parent().unwrap().join("V4-engine");
+    let v4front_path = manifest_dir.parent().unwrap().join("V4-front");
 
     // Build V4 VM library first
     let mut v4_config = Config::new(&v4_path);
