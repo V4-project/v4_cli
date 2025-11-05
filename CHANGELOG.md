@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Device integration test script**
+  - `scripts/test_device.sh` for hardware testing
+  - Tests all phases: arithmetic, stack ops, word definitions, meta commands, debugging commands
+  - Covers 10 test phases with ~30 test cases total
+  - Not intended for CI (requires physical device)
+  - Comprehensive documentation in `scripts/README.md`
+
 ## [0.4.0] - 2025-11-05
 
 ### Added
