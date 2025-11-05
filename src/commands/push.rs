@@ -17,14 +17,36 @@ pub fn push(file: &str, port: &str, detach: bool, timeout: Duration) -> Result<(
         )));
     }
 
-    let bytecode = fs::read(path)?;
+    let file_data = fs::read(path)?;
+    let file_size = file_data.len();
+
+    // .v4b files have a 16-byte header: "V4BC" + metadata
+    // V4-link expects raw bytecode only, so skip the header
+    const HEADER_SIZE: usize = 16;
+
+    if file_size < HEADER_SIZE {
+        return Err(crate::V4Error::Protocol(
+            "File too small to contain V4 bytecode header".to_string(),
+        ));
+    }
+
+    // Verify magic number "V4BC"
+    if &file_data[0..4] != b"V4BC" {
+        return Err(crate::V4Error::Protocol(
+            "Invalid V4 bytecode file (missing V4BC magic number)".to_string(),
+        ));
+    }
+
+    // Skip header, send only bytecode
+    let bytecode = &file_data[HEADER_SIZE..];
     let size = bytecode.len();
 
-    println!("Loading bytecode from {} ({} bytes)...", file, size);
+    println!("Loading bytecode from {} ({} bytes bytecode, {} bytes total)...",
+             file, size, file_size);
 
     if size == 0 {
         return Err(crate::V4Error::Protocol(
-            "Bytecode file is empty".to_string(),
+            "Bytecode section is empty".to_string(),
         ));
     }
 
