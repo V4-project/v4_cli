@@ -25,7 +25,7 @@ pub struct V4FrontBuf {
     pub size: usize,             // Size of main bytecode
 }
 
-// V4BytecodeHeader - .v4b file format header
+// V4BytecodeHeader - .v4b file format header (v0.2)
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct V4BytecodeHeader {
@@ -34,7 +34,7 @@ pub struct V4BytecodeHeader {
     pub version_minor: u8,
     pub flags: u16,
     pub code_size: u32,
-    pub reserved: u32,
+    pub word_count: u32, // Number of word definitions (v0.2+)
 }
 
 unsafe extern "C" {

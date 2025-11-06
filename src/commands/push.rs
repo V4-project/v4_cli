@@ -37,18 +37,19 @@ pub fn push(file: &str, port: &str, detach: bool, timeout: Duration) -> Result<(
         ));
     }
 
-    // Skip header, send only bytecode
-    let bytecode = &file_data[HEADER_SIZE..];
+    // Send entire .v4b file (including header)
+    // V4-link v0.2+ parses the header to extract word definitions
+    let bytecode = &file_data;
     let size = bytecode.len();
 
     println!(
-        "Loading bytecode from {} ({} bytes bytecode, {} bytes total)...",
-        file, size, file_size
+        "Loading bytecode from {} ({} bytes total)...",
+        file, size
     );
 
-    if size == 0 {
+    if size <= HEADER_SIZE {
         return Err(crate::V4Error::Protocol(
-            "Bytecode section is empty".to_string(),
+            "Bytecode file too small".to_string(),
         ));
     }
 

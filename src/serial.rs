@@ -29,6 +29,7 @@ impl V4Serial {
     /// Send a frame
     pub fn send_frame(&mut self, frame: &Frame) -> Result<()> {
         let encoded = frame.encode();
+        eprintln!("DEBUG: Sending frame ({} bytes): {:02X?}", encoded.len(), encoded);
         self.port.write_all(&encoded)?;
         self.port.flush()?;
         Ok(())
@@ -106,6 +107,7 @@ impl V4Serial {
                         }
 
                         if response.len() == total_frame_len {
+                            eprintln!("DEBUG: Received complete frame ({} bytes): {:02X?}", response.len(), response);
                             return Ok(response);
                         }
                     }
