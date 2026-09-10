@@ -53,7 +53,10 @@ cargo deny --locked check
 ```
 
 The audit fails on advisory warnings, including unmaintained and unsound crates.
-Duplicate dependency versions remain warnings under `deny.toml`, not ignored advisories.
+New duplicate dependency versions fail under `deny.toml`. Three exact-version
+exceptions cover platform dependencies still required by serialport 4.10.1:
+bitflags 1.3.2, nix 0.26.4 and windows-sys 0.52.0. Revisit these when serialport
+updates its dependencies. Advisory checks remain enabled for these crates.
 Security Audit runs daily and on dependency or audit configuration changes, and can
 also be started manually from Actions. If GitHub disables it for inactivity, re-enable
 the workflow before running it; a successful regular CI run is not a security audit.

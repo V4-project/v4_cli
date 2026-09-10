@@ -27,18 +27,18 @@ jobs:
       shell: bash
 
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: v4_cli
 
     - name: Checkout V4-engine
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: V4-project/V4-engine
         path: V4-engine
 
     - name: Checkout V4-front
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: kirisaki/V4-front
         path: V4-front
@@ -56,19 +56,19 @@ jobs:
         sudo apt-get install -y build-essential libudev-dev
 
     - name: Cache cargo registry
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cargo/registry
         key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Cache cargo index
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.cargo/git
         key: ${{ runner.os }}-cargo-git-${{ hashFiles('**/Cargo.lock') }}
 
     - name: Cache cargo build
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: v4_cli/target
         key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
@@ -94,18 +94,18 @@ jobs:
       run: mkdir -p ${{ github.workspace }}/..
 
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: v4_cli
 
     - name: Checkout V4-engine
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: V4-project/V4-engine
         path: V4-engine
 
     - name: Checkout V4-front
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: kirisaki/V4-front
         path: V4-front
@@ -133,7 +133,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@stable
@@ -152,18 +152,18 @@ jobs:
       run: mkdir -p ${{ github.workspace }}/..
 
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: v4_cli
 
     - name: Checkout V4-engine
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: V4-project/V4-engine
         path: V4-engine
 
     - name: Checkout V4-front
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: kirisaki/V4-front
         path: V4-front
@@ -198,18 +198,18 @@ jobs:
       run: mkdir -p ${{ github.workspace }}/..
 
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         path: v4_cli
 
     - name: Checkout V4-engine
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: V4-project/V4-engine
         path: V4-engine
 
     - name: Checkout V4-front
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         repository: kirisaki/V4-front
         path: V4-front

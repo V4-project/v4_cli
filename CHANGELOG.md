@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3] - 2026-09-10
+
+### Fixed
+- Update serialport to 4.10.1, rustyline to 18.0.1 and thiserror to 2, and refresh compatible lockfile dependencies while retaining Rust 1.91 support.
+- Resolve the deprecated SPDX license expression via unescaper 0.1.10 and remove redundant thiserror, unicode-width and Windows dependency versions.
+- Deny new dependency duplicates; document three exact-version exceptions still required by serialport instead of allowing all duplicates. Advisory checks are unchanged.
+- Move checkout, cache and release Actions to Node.js 24-compatible versions to remove deprecated runtime warnings.
+
 ## [0.6.2] - 2026-09-10
 
 ### Fixed

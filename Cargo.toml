@@ -1,6 +1,6 @@
 [package]
 name = "v4_cli"
-version = "0.6.2"
+version = "0.6.3"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Akihito Kirisaki"]
@@ -19,10 +19,10 @@ path = "src/main.rs"
 
 [dependencies]
 clap = { version = "4.5", features = ["derive", "cargo"] }
-serialport = { version = "4.5", default-features = false }
-thiserror = "1.0"
+serialport = { version = "4.10.1", default-features = false }
+thiserror = "2.0"
 indicatif = "0.18"
-rustyline = "14.0"
+rustyline = "18.0.1"
 
 [dev-dependencies]
 assert_cmd = "2.0"
