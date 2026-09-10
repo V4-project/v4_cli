@@ -43,6 +43,14 @@ cargo build --release
 
 ## Usage
 
+With V4-link 0.5+, engine failures are reported consistently, for example
+`VM error -11: division by zero`. Messages are generated from the engine's
+error definitions. Legacy devices without a detailed code still report VM_ERROR;
+unknown future engine codes retain their numeric value. Protocol/CRC, serial,
+compiler and VM failures remain separate error categories.
+The runtime must return from its VM diagnostic callback to send a reply (V4-runtime 0.3.2+).
+Failures do not undo earlier VM effects; inspect the state or reset before retrying.
+
 ### Interactive REPL
 
 Start an interactive Forth REPL session:

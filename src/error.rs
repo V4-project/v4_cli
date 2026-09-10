@@ -2,6 +2,8 @@ use thiserror::Error;
 
 pub type Result<T> = std::result::Result<T, V4Error>;
 
+include!(concat!(env!("OUT_DIR"), "/vm_errors.rs"));
+
 #[derive(Error, Debug)]
 pub enum V4Error {
     #[error("Serial port error: {0}")]
@@ -15,6 +17,9 @@ pub enum V4Error {
 
     #[error("Device error: {0}")]
     Device(String),
+
+    #[error("VM error {code}: {message}")]
+    Vm { code: i32, message: &'static str },
 
     #[error("Timeout waiting for response")]
     Timeout,

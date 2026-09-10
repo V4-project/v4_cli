@@ -74,7 +74,7 @@ fn reset_vm(port: &str) -> Result<(), String> {
     }
 
     let output = Command::new(get_v4_binary())
-        .args(&["reset", "--port", port])
+        .args(["reset", "--port", port])
         .output()
         .map_err(|e| format!("Failed to execute reset: {}", e))?;
 
@@ -100,7 +100,7 @@ fn compile_and_push(port: &str, source: &str, name: &str) -> Result<(), String> 
     let bytecode_path = source_path.with_extension("v4b");
 
     let compile_output = Command::new(&v4_bin)
-        .args(&[
+        .args([
             "compile",
             source_path.to_str().unwrap(),
             "-o",
@@ -118,7 +118,7 @@ fn compile_and_push(port: &str, source: &str, name: &str) -> Result<(), String> 
 
     // Push bytecode
     let push_output = Command::new(&v4_bin)
-        .args(&["push", bytecode_path.to_str().unwrap(), "--port", port])
+        .args(["push", bytecode_path.to_str().unwrap(), "--port", port])
         .output()
         .map_err(|e| format!("Failed to push: {}", e))?;
 
@@ -173,8 +173,7 @@ LED_ON
 LED_OFF
 "#;
 
-    compile_and_push(&port, led_off_source, "test_led_off.v4")
-        .expect("Failed to execute LED_OFF");
+    compile_and_push(&port, led_off_source, "test_led_off.v4").expect("Failed to execute LED_OFF");
 
     println!("✓ LED should be OFF now");
     thread::sleep(Duration::from_secs(1));
@@ -259,8 +258,7 @@ fn hardware_multiple_file_loading() {
 WORD1
 "#;
 
-    compile_and_push(&port, file1_source, "test_multi_1.v4")
-        .expect("Failed to load file 1");
+    compile_and_push(&port, file1_source, "test_multi_1.v4").expect("Failed to load file 1");
     println!("✓ File 1 loaded (LED ON)");
     thread::sleep(Duration::from_millis(500));
 
@@ -273,8 +271,7 @@ WORD1
 WORD3
 "#;
 
-    compile_and_push(&port, file2_source, "test_multi_2.v4")
-        .expect("Failed to load file 2");
+    compile_and_push(&port, file2_source, "test_multi_2.v4").expect("Failed to load file 2");
     println!("✓ File 2 loaded (LED OFF)");
     thread::sleep(Duration::from_millis(500));
 
@@ -285,8 +282,7 @@ WORD3
 WORD6
 "#;
 
-    compile_and_push(&port, file3_source, "test_multi_3.v4")
-        .expect("Failed to load file 3");
+    compile_and_push(&port, file3_source, "test_multi_3.v4").expect("Failed to load file 3");
     println!("✓ File 3 loaded (LED ON)");
     thread::sleep(Duration::from_millis(500));
 }
@@ -312,22 +308,19 @@ fn hardware_sequential_operations() {
 : LED_OFF 1 1 0 0x0101 SYS DROP ;
 "#;
 
-    compile_and_push(&port, setup_source, "test_seq_setup.v4")
-        .expect("Failed to setup");
+    compile_and_push(&port, setup_source, "test_seq_setup.v4").expect("Failed to setup");
     println!("✓ Setup complete");
 
     // Rapid on/off sequence
     for i in 0..3 {
         println!("Cycle {}: ON", i + 1);
         let on_source = "LED_ON";
-        compile_and_push(&port, on_source, &format!("test_seq_on_{}.v4", i))
-            .expect("Failed ON");
+        compile_and_push(&port, on_source, &format!("test_seq_on_{}.v4", i)).expect("Failed ON");
         thread::sleep(Duration::from_millis(300));
 
         println!("Cycle {}: OFF", i + 1);
         let off_source = "LED_OFF";
-        compile_and_push(&port, off_source, &format!("test_seq_off_{}.v4", i))
-            .expect("Failed OFF");
+        compile_and_push(&port, off_source, &format!("test_seq_off_{}.v4", i)).expect("Failed OFF");
         thread::sleep(Duration::from_millis(300));
     }
 

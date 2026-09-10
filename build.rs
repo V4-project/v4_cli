@@ -8,6 +8,26 @@ fn main() {
     let v4_path = manifest_dir.parent().unwrap().join("V4-engine");
     let v4front_path = manifest_dir.parent().unwrap().join("V4-front");
 
+    // Use the engine's error definitions as the only source of VM messages.
+    let errors_path = v4_path.join("include/v4/errors.def");
+    let definitions = std::fs::read_to_string(&errors_path).expect("read engine errors.def");
+    let mut messages =
+        String::from("pub fn vm_error_message(code: i32) -> &'static str {\nmatch code {\n");
+    for line in definitions.lines().map(str::trim) {
+        if let Some(entry) = line.strip_prefix("ERR(") {
+            let entry = entry
+                .strip_suffix(')')
+                .expect("engine ERR entry terminator");
+            let fields: Vec<_> = entry.splitn(3, ',').map(str::trim).collect();
+            let code: i32 = fields[1].parse().expect("engine error number");
+            messages.push_str(&format!("{code} => {},\n", fields[2]));
+        }
+    }
+    messages.push_str("_ => \"unknown error\",\n}\n}\n");
+    let out_dir = PathBuf::from(std::env::var_os("OUT_DIR").expect("OUT_DIR"));
+    std::fs::write(out_dir.join("vm_errors.rs"), messages).expect("write VM error messages");
+    println!("cargo:rerun-if-changed={}", errors_path.display());
+
     // Build V4 VM library first
     let mut v4_config = Config::new(&v4_path);
     v4_config

@@ -30,6 +30,31 @@ pub struct Response {
     pub data: Vec<u8>,
 }
 
+impl Response {
+    /// Original engine error, if supplied by a V4-link 0.5+ device.
+    pub fn vm_error_code(&self) -> Option<i32> {
+        if self.error_code == ErrorCode::VmError && self.data.len() == 4 {
+            Some(i32::from_le_bytes(self.data[..4].try_into().unwrap()))
+        } else {
+            None
+        }
+    }
+
+    /// Keep engine failures distinct from transport and compiler failures.
+    pub fn ensure_success(&self) -> Result<()> {
+        if self.error_code == ErrorCode::Ok {
+            return Ok(());
+        }
+        if let Some(code) = self.vm_error_code() {
+            return Err(V4Error::Vm {
+                code,
+                message: crate::error::vm_error_message(code),
+            });
+        }
+        Err(V4Error::Device(self.error_code.name().to_string()))
+    }
+}
+
 impl Frame {
     /// Create a new frame
     pub fn new(command: Command, payload: Vec<u8>) -> Result<Self> {
@@ -88,6 +113,11 @@ impl Frame {
         }
 
         let length = u16::from_le_bytes([data[1], data[2]]) as usize;
+        if length == 0 {
+            return Err(V4Error::Protocol(
+                "Response is missing its error code".into(),
+            ));
+        }
         let expected_frame_len = 4 + length; // STX(1) + LEN(2) + PAYLOAD(length) + CRC(1)
 
         if data.len() < expected_frame_len {
@@ -119,8 +149,20 @@ impl Frame {
         let err_code = ErrorCode::from_u8(err_code)
             .ok_or_else(|| V4Error::Protocol(format!("Unknown error code: {:#04x}", err_code)))?;
 
-        // Parse word indices if present
-        let word_indices = if !payload.is_empty() {
+        if err_code == ErrorCode::VmError && !payload.is_empty() {
+            if payload.len() != 4 {
+                return Err(V4Error::Protocol(
+                    "VM error detail must contain one i32".into(),
+                ));
+            }
+            let code = i32::from_le_bytes(payload.try_into().unwrap());
+            if code >= 0 {
+                return Err(V4Error::Protocol("VM error detail must be negative".into()));
+            }
+        }
+
+        // Failure details are never a word-index list.
+        let word_indices = if err_code == ErrorCode::Ok && !payload.is_empty() {
             let word_count = payload[0] as usize;
             let mut indices = Vec::with_capacity(word_count);
 
@@ -171,6 +213,74 @@ impl FrameBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn error_frame(status: ErrorCode, detail: &[u8]) -> Vec<u8> {
+        let length = (1 + detail.len()) as u16;
+        let mut frame = vec![STX, length as u8, (length >> 8) as u8, status as u8];
+        frame.extend_from_slice(detail);
+        frame.push(calc_crc8(&frame[1..]));
+        frame
+    }
+
+    #[test]
+    fn engine_errors_preserve_codes_and_use_engine_messages() {
+        for (code, message) in [
+            (-11_i32, "division by zero"),
+            (-15, "stack underflow"),
+            (-17, "dictionary full"),
+            (-1234567, "unknown error"),
+        ] {
+            let frame = error_frame(ErrorCode::VmError, &code.to_le_bytes());
+            let response = Frame::decode_response(&frame).unwrap();
+            assert_eq!(response.vm_error_code(), Some(code));
+            assert!(response.word_indices.is_empty());
+            let error = response.ensure_success().unwrap_err();
+            assert!(matches!(error, V4Error::Vm { code: value, .. } if value == code));
+            assert_eq!(error.to_string(), format!("VM error {code}: {message}"));
+        }
+    }
+
+    #[test]
+    fn legacy_and_transport_errors_keep_their_categories() {
+        for status in [
+            ErrorCode::VmError,
+            ErrorCode::InvalidFrame,
+            ErrorCode::BufferFull,
+        ] {
+            let response = Frame::decode_response(&error_frame(status, &[])).unwrap();
+            assert_eq!(response.vm_error_code(), None);
+            assert!(response.word_indices.is_empty());
+            assert!(matches!(response.ensure_success(), Err(V4Error::Device(_))));
+        }
+        let response = Frame::decode_response(&error_frame(ErrorCode::Ok, &[])).unwrap();
+        assert!(response.ensure_success().is_ok());
+    }
+
+    #[test]
+    fn malformed_error_details_are_protocol_errors() {
+        for detail in [
+            vec![0xff],
+            vec![0xff; 3],
+            vec![0xff; 5],
+            0_i32.to_le_bytes().to_vec(),
+            1_i32.to_le_bytes().to_vec(),
+        ] {
+            assert!(matches!(
+                Frame::decode_response(&error_frame(ErrorCode::VmError, &detail)),
+                Err(V4Error::Protocol(_))
+            ));
+        }
+        assert!(matches!(
+            Frame::decode_response(&[STX, 0, 0, 0, 0]),
+            Err(V4Error::Protocol(_))
+        ));
+        let mut corrupt = error_frame(ErrorCode::VmError, &(-11_i32).to_le_bytes());
+        corrupt[4] ^= 1;
+        assert!(matches!(
+            Frame::decode_response(&corrupt),
+            Err(V4Error::CrcMismatch { .. })
+        ));
+    }
 
     #[test]
     fn test_ping_frame_encoding() {

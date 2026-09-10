@@ -42,10 +42,7 @@ pub fn push(file: &str, port: &str, detach: bool, timeout: Duration) -> Result<(
     let bytecode = &file_data;
     let size = bytecode.len();
 
-    println!(
-        "Loading bytecode from {} ({} bytes total)...",
-        file, size
-    );
+    println!("Loading bytecode from {} ({} bytes total)...", file, size);
 
     if size <= HEADER_SIZE {
         return Err(crate::V4Error::Protocol(

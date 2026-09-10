@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-09-10
+
+### Added
+- Decode V4-link 0.5 VM_ERROR details and expose the original engine code in a typed VM error.
+- Generate VM error messages from V4-engine/include/v4/errors.def during the build, including a fallback for unknown future codes.
+- Continue accepting legacy VM_ERROR responses without detail.
+
+### Fixed
+- Centralize device failure handling in send_command so exec, push, REPL and queries consistently fail before reporting success.
+- Do not interpret error payloads as word indices; reject zero-length responses and malformed VM error details.
+- Apply Rust formatting and remove unnecessary argument borrows in hardware tests so format and Clippy checks pass.
+
 ## [0.5.0] - 2025-11-05
 
 ### Added
