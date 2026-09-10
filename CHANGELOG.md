@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.2] - 2026-09-10
+
+### Fixed
+- Remove unused anyhow dependency affected by RUSTSEC-2026-0190.
+- Upgrade indicatif to 0.18 to replace the unmaintained number_prefix dependency (RUSTSEC-2025-0119).
+- Pin cargo-audit 0.22.2 and cargo-deny 0.20.2 for current advisory database support; fail the audit on warnings instead of silently passing them.
+- Add manual security audit dispatch and triggers for audit configuration changes, use read-only workflow permissions, and separate the cargo-deny database cache from cargo-audit.
+
 ## [0.6.1] - 2026-09-10
 
 ### Fixed

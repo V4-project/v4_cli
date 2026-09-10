@@ -41,6 +41,23 @@ cargo build --release
 # Binary will be in target/release/v4
 ```
 
+## Security checks
+
+Run the same dependency checks as the Security Audit workflow:
+
+```bash
+cargo install cargo-audit --version 0.22.2 --locked
+cargo install cargo-deny --version 0.20.2 --locked
+cargo audit --deny warnings
+cargo deny --locked check
+```
+
+The audit fails on advisory warnings, including unmaintained and unsound crates.
+Duplicate dependency versions remain warnings under `deny.toml`, not ignored advisories.
+Security Audit runs daily and on dependency or audit configuration changes, and can
+also be started manually from Actions. If GitHub disables it for inactivity, re-enable
+the workflow before running it; a successful regular CI run is not a security audit.
+
 ## Usage
 
 With V4-link 0.5+, engine failures are reported consistently, for example
