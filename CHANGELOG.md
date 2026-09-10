@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-09-10
+
+### Fixed
+- Update CMake/MSVC build dependencies to detect current Visual Studio installations on Windows CI. Require cmake 0.1.58 or newer within the 0.1 series.
+
 ## [0.6.0] - 2026-09-10
 
 ### Added

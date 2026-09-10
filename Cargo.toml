@@ -1,6 +1,6 @@
 [package]
 name = "v4_cli"
-version = "0.6.0"
+version = "0.6.1"
 edition = "2024"
 rust-version = "1.91.0"
 authors = ["Akihito Kirisaki"]
@@ -31,7 +31,7 @@ predicates = "3.0"
 tempfile = "3.10"
 
 [build-dependencies]
-cmake = "0.1"
+cmake = "0.1.58"
 
 [profile.release]
 opt-level = "z"
